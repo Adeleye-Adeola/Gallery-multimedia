@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Upload Gallery</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            color: #2d3748;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #718096;
+            font-size: 18px;
+        }
+
+        .upload-section {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            padding: 30px;
+            margin-bottom: 40px;
+        }
+
+        .upload-area {
+            border: 2px dashed #cbd5e0;
+            border-radius: 8px;
+            padding: 40px 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            text-align: center;
+        }
+
+        .upload-area:hover {
+            border-color: #4299e1;
+            background-color: #f7fafc;
+        }
+
+        .upload-area.active {
+            border-color: #4299e1;
+            background-color: #ebf8ff;
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            color: #a0aec0;
+            margin-bottom: 16px;
+        }
+
+        .upload-text {
+            color: #718096;
+            margin-bottom: 16px;
+        }
+
+        .upload-input {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .btn {
+            background-color: #4299e1;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            background-color: #3182ce;
+        }
+
+        .btn:disabled {
+            background-color: #a0aec0;
+            cursor: not-allowed;
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .preview-container {
+            margin-top: 20px;
+            display: none;
+            text-align: center;
+        }
+
+        .preview-image {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .preview-details {
+            margin-top: 10px;
+            color: #718096;
+            font-size: 14px;
+        }
+
+        .gallery-section {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            padding: 30px;
+        }
+
+        .gallery-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .gallery-title {
+            color: #2d3748;
+            font-size: 24px;
+        }
+
+        .gallery-count {
+            color: #718096;
+            font-size: 16px;
+        }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .gallery-item {
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            aspect-ratio: 1 / 1;
+        }
+
+        .gallery-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .gallery-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .gallery-info {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+            color: white;
+            padding: 15px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .gallery-item:hover .gallery-info {
+            opacity: 1;
+        }
+
+        .gallery-filename {
+            font-size: 14px;
+            margin-bottom: 5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .gallery-size {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .empty-gallery {
+            text-align: center;
+            padding: 60px 20px;
+            color: #a0aec0;
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .empty-text {
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+
+        .empty-subtext {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        @media (max-width: 768px) {
+            .gallery-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                gap: 15px;
+            }
+            
+            .upload-section, .gallery-section {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Image Upload Gallery</h1>
+            <p class="subtitle">Upload and view your images in a beautiful gallery</p>
+        </header>
+        
+        <div class="upload-section">
+            <form id="uploadForm" enctype="multipart/form-data" method="post" action="">
+                {%csrf_token%}
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📁</div>
+                    <p class="upload-text">Drag & drop an image here or click to browse</p>
+                    <p class="upload-text">Supports: JPG, PNG, GIF (Max: 5MB)</p>
+                    <input type="file" name="image" class="upload-input" id="fileInput" accept="image/*", multiple >
+                </div>
+                
+                <div class="preview-container" id="previewContainer">
+                    <img src="/placeholder.svg" alt="Preview" class="preview-image" id="previewImage">
+                    <div class="preview-details" id="previewDetails"></div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn" id="resetBtn" style="background-color: #e2e8f0; color: #4a5568;">Reset</button>
+                    <button type="submit" class="btn" id="uploadBtn" disabled>Upload Image</button>
+                </div>
+            </form>
+        </div>
+        
+        <div class="gallery-section">
+            <div class="gallery-header">
+                <h2 class="gallery-title">Your Gallery</h2>
+                <span class="gallery-count" id="galleryCount">{{ image_list|length }} images</span>
+            </div>
+            
+            <div class="gallery-grid" id="galleryGrid">
+    {% if image_list %}
+        {% for images in image_list %}
+        <div class="gallery-item">
+            <img src="{{ images.image.url }}" alt="Gallery image" class="gallery-img">
+            <div class="gallery-info">
+                <div class="gallery-filename">{{ images.image.name|default:"Image" }}</div>
+                <div class="gallery-size">Uploaded image</div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty-gallery" id="emptyGallery">
+            <div class="empty-icon">🖼️</div>
+            <p class="empty-text">No images yet</p>
+            <p class="empty-subtext">Upload your first image to get started</p>
+        </div>
+    {% endif %}
+</div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Elements
+            const uploadForm = document.getElementById('uploadForm');
+            const uploadArea = document.getElementById('uploadArea');
+            const fileInput = document.getElementById('fileInput');
+            const uploadBtn = document.getElementById('uploadBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const previewContainer = document.getElementById('previewContainer');
+            const previewImage = document.getElementById('previewImage');
+            const previewDetails = document.getElementById('previewDetails');
+            
+            // Handle file selection for preview
+            fileInput.addEventListener('change', function() {
+                if (this.files.length > 0) {
+                    const file = this.files[0];
+                    
+                    // Validate file type
+                    if (!file.type.match('image.*')) {
+                        alert('Please select an image file (JPG, PNG, GIF)');
+                        resetForm();
+                        return;
+                    }
+                    
+                    // Validate file size (5MB max)
+                    if (file.size > 5 * 1024 * 1024) {
+                        alert('File size exceeds 5MB limit');
+                        resetForm();
+                        return;
+                    }
+                    
+                    // Create a FileReader to read the image for preview
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(e) {
+                        // Display the image preview
+                        previewImage.src = e.target.result;
+                        
+                        // Show the preview container
+                        previewContainer.style.display = 'block';
+                        
+                        // Display file details
+                        const fileSize = (file.size / 1024).toFixed(2);
+                        previewDetails.textContent = `${file.name} (${fileSize} KB)`;
+                    };
+                    
+                    // Read the image as a data URL
+                    reader.readAsDataURL(file);
+                    
+                    // Enable upload button
+                    uploadBtn.disabled = false;
+                }
+            });
+            
+            // Handle drag and drop
+            uploadArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                uploadArea.classList.add('active');
+            });
+            
+            uploadArea.addEventListener('dragleave', function() {
+                uploadArea.classList.remove('active');
+            });
+            
+            uploadArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                uploadArea.classList.remove('active');
+                
+                if (e.dataTransfer.files.length) {
+                    fileInput.files = e.dataTransfer.files;
+                    fileInput.dispatchEvent(new Event('change'));
+                }
+            });
+            
+            // Handle reset button
+            resetBtn.addEventListener('click', resetForm);
+            
+            // Function to reset the form
+            function resetForm() {
+                // Reset file input
+                fileInput.value = '';
+                
+                // Hide preview
+                previewContainer.style.display = 'none';
+                previewImage.src = '';
+                previewDetails.textContent = '';
+                
+                // Disable upload button
+                uploadBtn.disabled = true;
+            }
+            
+            // Optional: You can add this if you want to handle the form submission via AJAX instead
+            // This is commented out since you mentioned you'll handle the backend yourself
+            /*
+            uploadForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Create FormData object
+                const formData = new FormData(this);
+                
+                // Here you would send the formData to your backend
+                // fetch('/upload', {
+                //     method: 'POST',
+                //     body: formData
+                // })
+                // .then(response => response.json())
+                // .then(data => {
+                //     // Handle successful upload
+                //     // Add the new image to the gallery
+                // })
+                // .catch(error => {
+                //     // Handle error
+                // });
+            });
+            */
+        });
+    </script>
+</body>
+</html>
+
